@@ -9,7 +9,8 @@ import java.net.Socket;
 
 @Log4j2
 public class ClientProcessor {
-    private static final String DELIMITER = "/"; // TODO check if this acts as a regex
+    private static final String DELIMITER = "\\/";
+    private static final char EOF = '%';
     private static final String OK_RESPONSE = "OK";
     @Nonnull
     protected final Socket csock;
@@ -45,7 +46,7 @@ public class ClientProcessor {
         }
     }
 
-    private boolean isIOStreamValid() {
+    private boolean isPipeValid() {
         return in != null && out != null;
     }
 
@@ -55,32 +56,47 @@ public class ClientProcessor {
                 && InetAddresses.isInetAddress(parts[2]);
     }
 
+    @Nonnull
+    private String[] obtainMetadata() throws IOException {
+        final StringBuilder sb = new StringBuilder();
+        char c;
+        while ((c = in.readChar()) != EOF) {
+            sb.append(c);
+        }
+        return sb.toString().split(DELIMITER);
+    }
+
+    private boolean isUserPermissionGranted(@Nonnull final String filename,
+                                            @Nonnull final String host,
+                                            int filesize) {
+        // TODO show dialog with options and ask user if we should proceed
+        return false;
+    }
+
     public void processClient() {
-        if (!isIOStreamValid()) {
+        if (!isPipeValid()) {
             closeConnections();
             return;
         }
-
+        // TODO may want to wrap entire method in a single try/catch if all steps throw IOException
         // step 1: parse the filename/filesize(in bytes)/ip from the connection as chars
-        final StringBuilder sb = new StringBuilder();
         try {
-            while (in.available() > 0) {
-                sb.append(in.readChar());
+            final String[] parts = obtainMetadata();
+            if (!isValidTransferRequest(parts)) {
+                closeConnections();
+                return;
+            }
+            final String filename = parts[0], host = parts[2];
+            final int filesize = Integer.parseInt(parts[1]);
+            if (!isUserPermissionGranted(filename, host, filesize)) {
+                closeConnections();
+                return;
             }
         } catch (IOException e) {
             e.printStackTrace();
             closeConnections();
             return;
         }
-        final String[] parts = sb.toString().split(DELIMITER);
-        if (!isValidTransferRequest(parts)) {
-            closeConnections();
-            return;
-        }
-        final String filename = parts[0], host = parts[2];
-        final int filesize = Integer.parseInt(parts[1]);
-        // TODO Ask user with prompt to request transfer of file
-
 
         // step 2: If valid respond with "OK"
         try {
