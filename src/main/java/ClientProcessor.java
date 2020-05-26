@@ -124,21 +124,20 @@ public class ClientProcessor {
             out.writeChars(OK_RESPONSE);
 
             // step 3: read the binary data, write to file stream
-            long readCount = 0;
             long iterations = filesize / BUFFER_SIZE;
-            if (filesize % BUFFER_SIZE != 0)
+            int remainder = filesize % BUFFER_SIZE;
+            if (remainder != 0)
                 iterations ++;
 
             byte[] buf = new byte[BUFFER_SIZE];
             final File saveFile = createUniqueFile(originalFilename);
             final FileOutputStream fileStream = new FileOutputStream(saveFile);
             // TODO should filestream be declared earlier so that it can properly close upon exception?
-
-            for (int i = 0; i < iterations; i++){
-                readCount += Math.min(in.available(), buf.length);
-                in.readFully(buf);
-                fileStream.write(buf);
-                // TODO careful about the very last buffer, it will contain outdated bytes at the end
+            // TODO optimize reading and writing to the buffer
+            for (int i = 0; i < iterations; i++) {
+                int size = i == iterations ? remainder : BUFFER_SIZE;
+                in.readFully(buf, 0, size);
+                fileStream.write(buf, 0, size);
             }
             fileStream.flush();
             fileStream.close();
@@ -148,16 +147,12 @@ public class ClientProcessor {
             if (in.read() != -1) {
                 log.error("Client has not sent over the listed amount of data");
                 closeConnections();
-                return;
             }
 
         } catch(IOException e) {
             e.printStackTrace();
+        } finally {
             closeConnections();
-            return;
         }
-
-
-        closeConnections();
     }
 }
