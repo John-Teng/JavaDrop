@@ -6,12 +6,15 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.net.Socket;
+import java.util.Arrays;
 
 @Log4j2
 public class ClientProcessor {
     private static final String DELIMITER = "\\/";
     private static final char EOF = '%';
     private static final String OK_RESPONSE = "OK";
+    private static final int BUFFER_SIZE =  2048; // TODO find a good buffer size
+
     @Nonnull
     protected final Socket csock;
     @Nullable
@@ -73,42 +76,87 @@ public class ClientProcessor {
         return false;
     }
 
+    @Nonnull
+    private File createUniqueFile(@Nonnull final String originalFilename) throws IOException {
+        final String[] existingFilenames = new File("/").list(); // TODO make this the save destination directory, probably want to sanitize this earlier on
+        if (existingFilenames == null)
+            throw new IOException("Specified save directory could not be located");
+        final StringBuilder filenameBuilder = new StringBuilder(originalFilename);
+
+        int fileIncrement = 1;
+        Arrays.sort(existingFilenames);
+        while (Arrays.binarySearch(existingFilenames, filenameBuilder.toString()) > 0) {
+            if (fileIncrement > 1)
+                filenameBuilder.deleteCharAt(filenameBuilder.length() - 1);
+            filenameBuilder.append(fileIncrement);
+            fileIncrement ++;
+        }
+        final File saveFile = new File(filenameBuilder.toString());
+        saveFile.createNewFile();
+        return saveFile;
+    }
+
     public void processClient() {
+        // check IO Pipe before we attempt
         if (!isPipeValid()) {
             closeConnections();
             return;
         }
-        // TODO may want to wrap entire method in a single try/catch if all steps throw IOException
-        // step 1: parse the filename/filesize(in bytes)/ip from the connection as chars
+
+        // TODO break each of these steps into individual functions to unit test
         try {
+            // step 1: parse the filename/filesize(in bytes)/ip metadata from the connection as chars
             final String[] parts = obtainMetadata();
             if (!isValidTransferRequest(parts)) {
+                log.error("Received metadata contains error");
                 closeConnections();
                 return;
             }
-            final String filename = parts[0], host = parts[2];
+            final String originalFilename = parts[0], host = parts[2];
             final int filesize = Integer.parseInt(parts[1]);
-            if (!isUserPermissionGranted(filename, host, filesize)) {
+            if (!isUserPermissionGranted(originalFilename, host, filesize)) {
+                log.info("User has denied permission for file transfer");
                 closeConnections();
                 return;
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            closeConnections();
-            return;
-        }
 
-        // step 2: If valid respond with "OK"
-        try {
+            // step 2: If valid, respond with "OK"
             out.writeChars(OK_RESPONSE);
-        } catch (IOException e) {
+
+            // step 3: read the binary data, write to file stream
+            long readCount = 0;
+            long iterations = filesize / BUFFER_SIZE;
+            if (filesize % BUFFER_SIZE != 0)
+                iterations ++;
+
+            byte[] buf = new byte[BUFFER_SIZE];
+            final File saveFile = createUniqueFile(originalFilename);
+            final FileOutputStream fileStream = new FileOutputStream(saveFile);
+            // TODO should filestream be declared earlier so that it can properly close upon exception?
+
+            for (int i = 0; i < iterations; i++){
+                readCount += Math.min(in.available(), buf.length);
+                in.readFully(buf);
+                fileStream.write(buf);
+                // TODO careful about the very last buffer, it will contain outdated bytes at the end
+            }
+            fileStream.flush();
+            fileStream.close();
+
+            // step 4: check to see that the stream is closed by the client by returning a -1
+            // if this is not the case, then it means the transfer is invalid
+            if (in.read() != -1) {
+                log.error("Client has not sent over the listed amount of data");
+                closeConnections();
+                return;
+            }
+
+        } catch(IOException e) {
             e.printStackTrace();
             closeConnections();
             return;
         }
 
-        // step 3: parse the binary data and keep count
-        // step 4: once the connection severs, count the binary data to see if complete
 
         closeConnections();
     }
