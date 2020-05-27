@@ -1,3 +1,4 @@
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.InetAddresses;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -13,7 +14,7 @@ public class ClientProcessor {
     private static final String DELIMITER = "\\/";
     private static final char EOF = '%';
     private static final String OK_RESPONSE = "OK";
-    private static final int BUFFER_SIZE =  2048; // TODO find a good buffer size
+    private static final int BUFFER_SIZE = 2048; // TODO find a good buffer size
 
     @Nonnull
     protected final Socket csock;
@@ -25,7 +26,7 @@ public class ClientProcessor {
     // TODO make this class a singleton
     public ClientProcessor(@Nonnull Socket sock) {
         csock = sock;
-        log.debug("Connected to client from IP " + csock.getRemoteSocketAddress() + " Port " + csock.getPort());
+        log.debug("Connected to client from IP " + csock.getRemoteSocketAddress().toString() + " Port " + csock.getPort());
         try {
             in = new DataInputStream(new BufferedInputStream(csock.getInputStream()));
             out = new DataOutputStream(new BufferedOutputStream(csock.getOutputStream()));
@@ -53,14 +54,16 @@ public class ClientProcessor {
         return in != null && out != null;
     }
 
-    private boolean isValidTransferRequest(@Nonnull String[] parts) {
+    @VisibleForTesting
+    boolean isValidTransferRequest(@Nonnull String[] parts) {
         return parts.length == 3
                 && NumberUtils.isParsable(parts[1])
                 && InetAddresses.isInetAddress(parts[2]);
     }
 
     @Nonnull
-    private String[] obtainMetadata() throws IOException {
+    @VisibleForTesting
+    String[] obtainMetadata() throws IOException {
         final StringBuilder sb = new StringBuilder();
         char c;
         while ((c = in.readChar()) != EOF) {
@@ -69,15 +72,17 @@ public class ClientProcessor {
         return sb.toString().split(DELIMITER);
     }
 
-    private boolean isUserPermissionGranted(@Nonnull final String filename,
-                                            @Nonnull final String host,
-                                            int filesize) {
+    @VisibleForTesting
+    boolean isUserPermissionGranted(@Nonnull final String filename,
+                                    @Nonnull final String host,
+                                    int filesize) {
         // TODO show dialog with options and ask user if we should proceed
         return false;
     }
 
     @Nonnull
-    private File createUniqueFile(@Nonnull final String originalFilename) throws IOException {
+    @VisibleForTesting
+    File createUniqueFile(@Nonnull final String originalFilename) throws IOException {
         final String[] existingFilenames = new File("/").list(); // TODO make this the save destination directory, probably want to sanitize this earlier on
         if (existingFilenames == null)
             throw new IOException("Specified save directory could not be located");
@@ -89,7 +94,7 @@ public class ClientProcessor {
             if (fileIncrement > 1)
                 filenameBuilder.deleteCharAt(filenameBuilder.length() - 1);
             filenameBuilder.append(fileIncrement);
-            fileIncrement ++;
+            fileIncrement++;
         }
         final File saveFile = new File(filenameBuilder.toString());
         saveFile.createNewFile();
@@ -127,7 +132,7 @@ public class ClientProcessor {
             long iterations = filesize / BUFFER_SIZE;
             int remainder = filesize % BUFFER_SIZE;
             if (remainder != 0)
-                iterations ++;
+                iterations++;
 
             byte[] buf = new byte[BUFFER_SIZE];
             final File saveFile = createUniqueFile(originalFilename);
@@ -149,7 +154,7 @@ public class ClientProcessor {
                 closeConnections();
             }
 
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         } finally {
             closeConnections();
