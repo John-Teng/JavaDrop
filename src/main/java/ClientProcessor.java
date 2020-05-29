@@ -10,9 +10,6 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Log4j2
 public class ClientProcessor {
@@ -39,7 +36,7 @@ public class ClientProcessor {
         } catch (IOException e) {
             e.printStackTrace();
             log.debug("ClientProcessor could not be initialized with I/O Streams");
-            terminateWithError();
+            closeConnectionsWithError();
         }
     }
 
@@ -93,14 +90,13 @@ public class ClientProcessor {
         // TODO show dialog telling the user that the transfer/connection failed
     }
 
-    private void terminateWithError() {
+    private void closeConnectionsWithError() {
         closeConnections();
         showErrorDialog();
     }
 
-    @Nonnull
     @VisibleForTesting
-    void writeToFile(@Nonnull final File saveFile, final long filesize) throws IOException {
+    void writeToFile(@Nonnull final File saveFile, final long filesize) throws IOException { // TODO add unit test
         long iterations = filesize / BUFFER_SIZE;
         int remainder = (int) filesize % BUFFER_SIZE;
         if (remainder != 0)
@@ -137,7 +133,7 @@ public class ClientProcessor {
     public void processClient() {
         // check IO Pipe before we attempt
         if (!isPipeValid()) {
-            terminateWithError();
+            closeConnectionsWithError();
             return;
         }
         // TODO unsuccessful completion of this main loop should show error dialog
@@ -145,7 +141,7 @@ public class ClientProcessor {
             // step 1: parse the filename/filesize(in bytes)/ip metadata from the connection as chars
             final TransferRequest request = getTransferRequest();
             if (request == null) {
-                terminateWithError();
+                closeConnectionsWithError();
                 return;
             }
 
@@ -161,11 +157,11 @@ public class ClientProcessor {
             // if this is not the case, then it means the transfer is invalid
             if (in.read() != -1) {
                 log.error("Client has not sent over the listed amount of data");
-                terminateWithError();
+                closeConnectionsWithError();
             }
         } catch (IOException e) {
             e.printStackTrace();
-            terminateWithError();
+            closeConnectionsWithError();
         } finally {
             closeConnections();
         }
