@@ -22,8 +22,9 @@ public class ClientProcessor {
     protected DataInputStream in;
     @Nullable
     protected DataOutputStream out;
+    @Nullable
+    protected FileOutputStream fileStream;
 
-    // TODO make this class a singleton
     public ClientProcessor(@Nonnull Socket sock) {
         csock = sock;
         log.debug("Connected to client from IP " + csock.getRemoteSocketAddress().toString() + " Port " + csock.getPort());
@@ -44,6 +45,8 @@ public class ClientProcessor {
                 in.close();
             if (out != null)
                 out.close();
+            if (fileStream != null)
+                fileStream.close();
         } catch (IOException e) {
             e.printStackTrace();
             log.debug("There was a problem with closing connections");
@@ -136,8 +139,7 @@ public class ClientProcessor {
 
             byte[] buf = new byte[BUFFER_SIZE];
             final File saveFile = createUniqueFile(originalFilename);
-            final FileOutputStream fileStream = new FileOutputStream(saveFile);
-            // TODO should filestream be declared earlier so that it can properly close upon exception?
+            fileStream = new FileOutputStream(saveFile);
             // TODO optimize reading and writing to the buffer
             for (int i = 0; i < iterations; i++) {
                 int size = i == iterations ? remainder : BUFFER_SIZE;
