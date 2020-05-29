@@ -79,10 +79,10 @@ public class ClientProcessorTest {
         final String[] validTest2 = {"test.png", "12345", "2001:db8:1234:0000:0000:0000:0000:0000"};
         final String[] invalidTest1 = {"test.png", "12345f", "2001:db8:1234:0000:0000:0000:0000:0000"};
         final String[] invalidTest2 = {"test.png", "12345", "999.12.32.43"};
-        assertTrue(processor.isValidTransferRequest(validTest1));
-        assertTrue(processor.isValidTransferRequest(validTest2));
-        assertFalse(processor.isValidTransferRequest(invalidTest1));
-        assertFalse(processor.isValidTransferRequest(invalidTest2));
+        assertTrue(processor.isValidTransferMetadata(validTest1));
+        assertTrue(processor.isValidTransferMetadata(validTest2));
+        assertFalse(processor.isValidTransferMetadata(invalidTest1));
+        assertFalse(processor.isValidTransferMetadata(invalidTest2));
     }
 
     @Test
@@ -98,7 +98,7 @@ public class ClientProcessorTest {
         when(mockSocket.getInputStream()).thenReturn(inputStream);
         processor = new ClientProcessor(mockServerSocket.accept());
 
-        assertArrayEquals(expected, processor.obtainMetadata());
+        assertArrayEquals(expected, processor.readMetadataFromStream());
     }
 
     @Test(expected = EOFException.class)
@@ -115,6 +115,6 @@ public class ClientProcessorTest {
         processor = new ClientProcessor(mockServerSocket.accept());
 
         // Trigger exception
-        processor.obtainMetadata();
+        processor.readMetadataFromStream();
     }
 }

@@ -1,5 +1,8 @@
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.InetAddresses;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -36,7 +39,7 @@ public class ClientProcessor {
         } catch (IOException e) {
             e.printStackTrace();
             log.debug("ClientProcessor could not be initialized with I/O Streams");
-            closeConnections();
+            terminateWithError();
         }
     }
 
@@ -60,7 +63,7 @@ public class ClientProcessor {
     }
 
     @VisibleForTesting
-    boolean isValidTransferRequest(@Nonnull String[] parts) {
+    boolean isValidTransferMetadata(@Nonnull String[] parts) {
         return parts.length == 3
                 && NumberUtils.isParsable(parts[1])
                 && InetAddresses.isInetAddress(parts[2]);
@@ -68,7 +71,7 @@ public class ClientProcessor {
 
     @Nonnull
     @VisibleForTesting
-    String[] obtainMetadata() throws IOException {
+    String[] readMetadataFromStream() throws IOException {
         final StringBuilder sb = new StringBuilder();
         char c;
         while ((c = in.readChar()) != EOF) {
@@ -80,9 +83,18 @@ public class ClientProcessor {
     @VisibleForTesting
     boolean isUserPermissionGranted(@Nonnull final String filename,
                                     @Nonnull final String host,
-                                    int filesize) {
+                                    final long filesize) {
         // TODO show dialog with options and ask user if we should proceed
         return false;
+    }
+
+    void showErrorDialog() {
+        // TODO show dialog telling the user that the transfer/connection failed
+    }
+
+    private void terminateWithError() {
+        closeConnections();
+        showErrorDialog();
     }
 
     @Nonnull
@@ -121,27 +133,54 @@ public class ClientProcessor {
         return existingFilenames;
     }
 
+    @Nonnull
+    @VisibleForTesting
+    void writeToFile(@Nonnull final File saveFile, final long filesize) throws IOException {
+        long iterations = filesize / BUFFER_SIZE;
+        int remainder = (int) filesize % BUFFER_SIZE;
+        if (remainder != 0)
+            iterations++;
+
+        byte[] buf = new byte[BUFFER_SIZE];
+        fileStream = new FileOutputStream(saveFile);
+        // TODO optimize reading and writing to the buffer
+        for (int i = 0; i < iterations; i++) {
+            int size = i == iterations ? remainder : BUFFER_SIZE;
+            in.readFully(buf, 0, size);
+            fileStream.write(buf, 0, size);
+        }
+        fileStream.flush();
+        fileStream.close();
+    }
+
+    @Nullable
+    @VisibleForTesting
+    TransferRequest getTransferRequest() throws IOException {
+        final String[] parts = readMetadataFromStream();
+        if (!isValidTransferMetadata(parts)) {
+            log.error("Received metadata contains error");
+            return null;
+        }
+        final TransferRequest request = new TransferRequest(Long.parseLong(parts[1]), parts[0], parts[2]);
+        if (!isUserPermissionGranted(request.getFilename(), request.getHost(), request.getFilesize())) {
+            log.info("User has denied permission for file transfer");
+            return null;
+        }
+        return request;
+    }
+
     public void processClient() {
         // check IO Pipe before we attempt
         if (!isPipeValid()) {
-            closeConnections();
+            terminateWithError();
             return;
         }
-
-        // TODO break each of these steps into individual functions to unit test
+        // TODO unsuccessful completion of this main loop should show error dialog
         try {
             // step 1: parse the filename/filesize(in bytes)/ip metadata from the connection as chars
-            final String[] parts = obtainMetadata();
-            if (!isValidTransferRequest(parts)) {
-                log.error("Received metadata contains error");
-                closeConnections();
-                return;
-            }
-            final String originalFilename = parts[0], host = parts[2];
-            final int filesize = Integer.parseInt(parts[1]);
-            if (!isUserPermissionGranted(originalFilename, host, filesize)) {
-                log.info("User has denied permission for file transfer");
-                closeConnections();
+            final TransferRequest request = getTransferRequest();
+            if (request == null) {
+                terminateWithError();
                 return;
             }
 
@@ -149,35 +188,27 @@ public class ClientProcessor {
             out.writeChars(OK_RESPONSE);
 
             // step 3: read the binary data, write to file stream
-            long iterations = filesize / BUFFER_SIZE;
-            int remainder = filesize % BUFFER_SIZE;
-            if (remainder != 0)
-                iterations++;
-
-            byte[] buf = new byte[BUFFER_SIZE];
             // TODO get the correct directory for where the file should be saved
-            final File saveFile = createUniqueFile(originalFilename, "/");
-            fileStream = new FileOutputStream(saveFile);
-            // TODO optimize reading and writing to the buffer
-            for (int i = 0; i < iterations; i++) {
-                int size = i == iterations ? remainder : BUFFER_SIZE;
-                in.readFully(buf, 0, size);
-                fileStream.write(buf, 0, size);
-            }
-            fileStream.flush();
-            fileStream.close();
+            final File saveFile = createUniqueFile(request.getFilename(), "/");
+            writeToFile(saveFile, request.getFilesize());
 
             // step 4: check to see that the stream is closed by the client by returning a -1
             // if this is not the case, then it means the transfer is invalid
             if (in.read() != -1) {
                 log.error("Client has not sent over the listed amount of data");
-                closeConnections();
+                terminateWithError();
             }
-
         } catch (IOException e) {
             e.printStackTrace();
+            terminateWithError();
         } finally {
             closeConnections();
         }
+    }
+
+    @Getter @Setter @AllArgsConstructor
+    static class TransferRequest {
+        private long filesize;
+        private String filename, host;
     }
 }
