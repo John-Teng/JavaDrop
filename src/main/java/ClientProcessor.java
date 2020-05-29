@@ -88,7 +88,7 @@ public class ClientProcessor {
     File createUniqueFile(@Nonnull final String originalName) throws IOException {
         // TODO get the correct directory for where the file should be saved
         final String[] existingNames = getExistingFilenames("/");
-        final File saveFile = new File(findUniqueFilename(originalName, existingNames));
+        final File saveFile = new File(createSimilarFilename(originalName, existingNames));
         if (!saveFile.createNewFile())
             throw new IOException("New file could not be created");
         return saveFile;
@@ -96,17 +96,17 @@ public class ClientProcessor {
 
     @Nonnull
     @VisibleForTesting
-    String findUniqueFilename(@Nonnull final String originalName, @Nonnull final String[] existingNames) {
-        final StringBuilder filenameBuilder = new StringBuilder(originalName);
-        int fileIncrement = 1;
+    String createSimilarFilename(@Nonnull final String originalName, @Nonnull final String[] existingNames) {
         Arrays.sort(existingNames);
-        while (Arrays.binarySearch(existingNames, filenameBuilder.toString()) > 0) {
-            if (fileIncrement > 1)
-                filenameBuilder.deleteCharAt(filenameBuilder.length() - 1);
-            filenameBuilder.append(fileIncrement);
+        final String[] temp = originalName.split("\\.");
+        final String body = temp[0], extension = temp[1];
+        String potentialName = body + extension;
+        int fileIncrement = 0;
+        while (Arrays.binarySearch(existingNames, potentialName) > 0) {
             fileIncrement++;
+            potentialName = body + fileIncrement + extension;
         }
-        return filenameBuilder.toString();
+        return potentialName;
     }
 
     @Nonnull
