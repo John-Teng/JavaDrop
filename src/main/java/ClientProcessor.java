@@ -85,23 +85,37 @@ public class ClientProcessor {
 
     @Nonnull
     @VisibleForTesting
-    File createUniqueFile(@Nonnull final String originalFilename) throws IOException {
-        final String[] existingFilenames = new File("/").list(); // TODO make this the save destination directory, probably want to sanitize this earlier on
-        if (existingFilenames == null)
-            throw new IOException("Specified save directory could not be located");
-        final StringBuilder filenameBuilder = new StringBuilder(originalFilename);
+    File createUniqueFile(@Nonnull final String originalName) throws IOException {
+        // TODO get the correct directory for where the file should be saved
+        final String[] existingNames = getExistingFilenames("/");
+        final File saveFile = new File(findUniqueFilename(originalName, existingNames));
+        if (!saveFile.createNewFile())
+            throw new IOException("New file could not be created");
+        return saveFile;
+    }
 
+    @Nonnull
+    @VisibleForTesting
+    String findUniqueFilename(@Nonnull final String originalName, @Nonnull final String[] existingNames) {
+        final StringBuilder filenameBuilder = new StringBuilder(originalName);
         int fileIncrement = 1;
-        Arrays.sort(existingFilenames);
-        while (Arrays.binarySearch(existingFilenames, filenameBuilder.toString()) > 0) {
+        Arrays.sort(existingNames);
+        while (Arrays.binarySearch(existingNames, filenameBuilder.toString()) > 0) {
             if (fileIncrement > 1)
                 filenameBuilder.deleteCharAt(filenameBuilder.length() - 1);
             filenameBuilder.append(fileIncrement);
             fileIncrement++;
         }
-        final File saveFile = new File(filenameBuilder.toString());
-        saveFile.createNewFile();
-        return saveFile;
+        return filenameBuilder.toString();
+    }
+
+    @Nonnull
+    @VisibleForTesting
+    String[] getExistingFilenames(@Nonnull final String directory) throws IOException {
+        final String[] existingFilenames = new File(directory).list();
+        if (existingFilenames == null)
+            throw new IOException("Specified save directory could not be located");
+        return existingFilenames;
     }
 
     public void processClient() {
