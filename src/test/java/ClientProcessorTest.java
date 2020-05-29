@@ -1,4 +1,3 @@
-import com.google.common.collect.ImmutableSet;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -7,8 +6,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Set;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,8 +13,6 @@ import static org.junit.Assert.*;
 
 public class ClientProcessorTest {
 
-    private static final String TEST_DIR = "existingFilesTest";
-    private static final char EOF = '%';
     public Socket mockSocket;
     public ServerSocket mockServerSocket;
     public DataInputStream inputStream;
@@ -36,41 +31,6 @@ public class ClientProcessorTest {
         when(mockSocket.getPort()).thenReturn(10000);
 
         processor = new ClientProcessor(mockServerSocket.accept()); // This line needs to be repeated in certain tests
-    }
-
-    @Test
-    public void testGetExistingFilenamesSuccess() throws IOException {
-        final String pathToTestFolder = this
-                .getClass()
-                .getResource(TEST_DIR)
-                .toString()
-                .replaceFirst("file:", "");
-
-        final String[] existingFiles = processor.getExistingFilenames(pathToTestFolder);
-        Arrays.sort(existingFiles);
-
-        assertEquals(3, existingFiles.length);
-        assertEquals("test1.png", existingFiles[0]);
-        assertEquals("test2.jpg", existingFiles[1]);
-        assertEquals("test3.jpeg", existingFiles[2]);
-    }
-
-    @Test(expected = IOException.class)
-    public void testGetExistingFilenamesBadDirectory() throws IOException {
-        processor.getExistingFilenames("/random-incorrect-directory");
-    }
-
-    @Test
-    public void testCreateSimilarFilename() {
-        final Set<String> filenames = ImmutableSet.of("test.png", "testo.png", "testo-1.png", "testy1.png", "tst.jpg");
-
-        // Test the increments
-        assertEquals("test-1.png", processor.createIncrementedFilename("test.png", filenames));
-        assertEquals("testo-2.png", processor.createIncrementedFilename("testo.png", filenames));
-        assertEquals("testy1-1.png", processor.createIncrementedFilename("testy1.png", filenames));
-
-        // Same body, but different file extension
-        assertEquals("tst.png", processor.createIncrementedFilename("tst.png", filenames));
     }
 
     @Test

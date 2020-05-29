@@ -88,6 +88,7 @@ public class ClientProcessor {
         return false;
     }
 
+    @VisibleForTesting
     void showErrorDialog() {
         // TODO show dialog telling the user that the transfer/connection failed
     }
@@ -95,42 +96,6 @@ public class ClientProcessor {
     private void terminateWithError() {
         closeConnections();
         showErrorDialog();
-    }
-
-    @Nonnull
-    @VisibleForTesting
-    File createUniqueFile(@Nonnull final String filename, @Nonnull final String directory) throws IOException {
-        final Set<String> existingNames = Arrays
-                .stream(getExistingFilenames(directory))
-                .map(String::toLowerCase)
-                .collect(Collectors.toSet());
-        final File saveFile = new File(createIncrementedFilename(filename.toLowerCase(), existingNames));
-        if (!saveFile.createNewFile())
-            throw new IOException("New file could not be created");
-        return saveFile;
-    }
-
-    @Nonnull
-    @VisibleForTesting
-    String createIncrementedFilename(@Nonnull final String originalName, @Nonnull final Set<String> existingNames) {
-        int index = originalName.indexOf(".");
-        final String body = originalName.substring(0, index), extension = originalName.substring(index);
-        String potentialName = body + extension;
-        int fileIncrement = 0;
-        while (existingNames.contains(potentialName)) {
-            fileIncrement++;
-            potentialName = body + "-" + fileIncrement + extension;
-        }
-        return potentialName;
-    }
-
-    @Nonnull
-    @VisibleForTesting
-    String[] getExistingFilenames(@Nonnull final String directory) throws IOException {
-        final String[] existingFilenames = new File(directory).list();
-        if (existingFilenames == null)
-            throw new IOException("Specified save directory could not be located");
-        return existingFilenames;
     }
 
     @Nonnull
@@ -189,7 +154,7 @@ public class ClientProcessor {
 
             // step 3: read the binary data, write to file stream
             // TODO get the correct directory for where the file should be saved
-            final File saveFile = createUniqueFile(request.getFilename(), "/");
+            final File saveFile = FileUtils.createUniqueFile(request.getFilename(), "/");
             writeToFile(saveFile, request.getFilesize());
 
             // step 4: check to see that the stream is closed by the client by returning a -1
