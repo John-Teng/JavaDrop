@@ -8,6 +8,8 @@ import javax.annotation.Nullable;
 import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Log4j2
 public class ClientProcessor {
@@ -85,10 +87,12 @@ public class ClientProcessor {
 
     @Nonnull
     @VisibleForTesting
-    File createUniqueFile(@Nonnull final String originalName) throws IOException {
-        // TODO get the correct directory for where the file should be saved
-        final String[] existingNames = getExistingFilenames("/");
-        final File saveFile = new File(createSimilarFilename(originalName, existingNames));
+    File createUniqueFile(@Nonnull final String filename, @Nonnull final String directory) throws IOException {
+        final Set<String> existingNames = Arrays
+                .stream(getExistingFilenames(directory))
+                .map(String::toLowerCase)
+                .collect(Collectors.toSet());
+        final File saveFile = new File(createIncrementedFilename(filename.toLowerCase(), existingNames));
         if (!saveFile.createNewFile())
             throw new IOException("New file could not be created");
         return saveFile;
@@ -96,15 +100,14 @@ public class ClientProcessor {
 
     @Nonnull
     @VisibleForTesting
-    String createSimilarFilename(@Nonnull final String originalName, @Nonnull final String[] existingNames) {
-        Arrays.sort(existingNames);
-        final String[] temp = originalName.split("\\.");
-        final String body = temp[0], extension = temp[1];
+    String createIncrementedFilename(@Nonnull final String originalName, @Nonnull final Set<String> existingNames) {
+        int index = originalName.indexOf(".");
+        final String body = originalName.substring(0, index), extension = originalName.substring(index);
         String potentialName = body + extension;
         int fileIncrement = 0;
-        while (Arrays.binarySearch(existingNames, potentialName) > 0) {
+        while (existingNames.contains(potentialName)) {
             fileIncrement++;
-            potentialName = body + fileIncrement + extension;
+            potentialName = body + "-" + fileIncrement + extension;
         }
         return potentialName;
     }
@@ -152,7 +155,8 @@ public class ClientProcessor {
                 iterations++;
 
             byte[] buf = new byte[BUFFER_SIZE];
-            final File saveFile = createUniqueFile(originalFilename);
+            // TODO get the correct directory for where the file should be saved
+            final File saveFile = createUniqueFile(originalFilename, "/");
             fileStream = new FileOutputStream(saveFile);
             // TODO optimize reading and writing to the buffer
             for (int i = 0; i < iterations; i++) {
