@@ -1,4 +1,5 @@
 import com.google.common.io.Files;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -20,7 +21,6 @@ public class ClientProcessorTest {
     public Socket mockSocket;
     public ServerSocket mockServerSocket;
     public DataInputStream inputStream;
-    public DataOutputStream outputStream;
     public ClientProcessor processor;
 
     @Before
@@ -36,6 +36,12 @@ public class ClientProcessorTest {
 
         // This line needs to be repeated in certain tests
         processor = new ClientProcessor(mockServerSocket.accept());
+    }
+
+    @After
+    public void cleanup() throws IOException {
+        if (inputStream != null)
+            inputStream.close();
     }
 
     @Test
