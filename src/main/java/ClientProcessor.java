@@ -96,17 +96,16 @@ public class ClientProcessor {
     }
 
     @VisibleForTesting
-    void writeToFile(@Nonnull final File saveFile, final long filesize) throws IOException { // TODO add unit test
+    void writeStreamBytesToFile(@Nonnull final File saveFile, final long filesize) throws IOException {
         long iterations = filesize / BUFFER_SIZE;
-        int remainder = (int) filesize % BUFFER_SIZE;
-        if (remainder != 0)
+        if (filesize % BUFFER_SIZE != 0)
             iterations++;
 
         byte[] buf = new byte[BUFFER_SIZE];
         fileStream = new FileOutputStream(saveFile);
         // TODO optimize reading and writing to the buffer
         for (int i = 0; i < iterations; i++) {
-            int size = i == iterations ? remainder : BUFFER_SIZE;
+            int size = Math.min(in.available(), BUFFER_SIZE);
             in.readFully(buf, 0, size);
             fileStream.write(buf, 0, size);
         }
@@ -151,7 +150,7 @@ public class ClientProcessor {
             // step 3: read the binary data, write to file stream
             // TODO get the correct directory for where the file should be saved
             final File saveFile = FileUtils.createUniqueFile(request.getFilename(), "/");
-            writeToFile(saveFile, request.getFilesize());
+            writeStreamBytesToFile(saveFile, request.getFilesize());
 
             // step 4: check to see that the stream is closed by the client by returning a -1
             // if this is not the case, then it means the transfer is invalid

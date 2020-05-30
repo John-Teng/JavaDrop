@@ -8,13 +8,13 @@ import java.util.Set;
 import static org.junit.Assert.assertEquals;
 
 public class FileUtilsTest {
-    private static final String TEST_DIR = "existingFilesTest";
+    private static final String EXISTING_FILES_TEST_DIR = "existingFilesTest";
 
     @Test
     public void testGetExistingFilenamesSuccess() throws IOException {
         final String pathToTestFolder = this
                 .getClass()
-                .getResource(TEST_DIR)
+                .getResource(EXISTING_FILES_TEST_DIR)
                 .toString()
                 .replaceFirst("file:", "");
 
