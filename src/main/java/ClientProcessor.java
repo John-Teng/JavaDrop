@@ -1,3 +1,4 @@
+import Model.ProtocolConstants;
 import Model.TransferRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.InetAddresses;
@@ -11,9 +12,6 @@ import java.net.Socket;
 
 @Log4j2
 public class ClientProcessor {
-    private static final String DELIMITER = "\\/";
-    private static final char EOF = '%';
-    private static final String OK_RESPONSE = "OK";
     private static final int BUFFER_SIZE = 2048; // TODO find a good buffer size
 
     @Nonnull
@@ -69,10 +67,10 @@ public class ClientProcessor {
     String[] readMetadataFromStream() throws IOException {
         final StringBuilder sb = new StringBuilder();
         char c;
-        while ((c = in.readChar()) != EOF) {
+        while ((c = in.readChar()) != ProtocolConstants.EOF) {
             sb.append(c);
         }
-        return sb.toString().split(DELIMITER);
+        return sb.toString().split(ProtocolConstants.DELIMITER);
     }
 
     @VisibleForTesting
@@ -143,7 +141,7 @@ public class ClientProcessor {
             }
 
             // step 2: If valid, respond with "OK"
-            out.writeChars(OK_RESPONSE);
+            out.writeChars(ProtocolConstants.OK_RESPONSE);
 
             // step 3: read the binary data, write to file stream
             // TODO get the correct directory for where the file should be saved
