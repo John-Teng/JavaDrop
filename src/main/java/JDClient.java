@@ -2,14 +2,14 @@ import com.google.common.net.InetAddresses;
 import lombok.extern.log4j.Log4j2;
 
 import javax.annotation.Nonnull;
-import java.io.File;
+import java.io.*;
 
 @Log4j2
 public class JDClient {
     public static void main(@Nonnull String args[]) {
         // TODO basic args will be in the form: javadrop /usr/test.txt 192.168.12.54
 
-        // Step 1: sanitize user input
+        // Sanitize user input
         if (args.length != 2) {
             System.out.println("Usage: javadrop filepath IP-destination");
             return;
@@ -24,12 +24,7 @@ public class JDClient {
             return;
         }
 
-        // Step 2: get the file metadata
-        final String filename = source.getName(), host = args[1];
-        long filesize = source.length();
-
-        // Step 3: establish server handshake
-        // Step 4: send over binary data via output stream
+        final ServerProcessor processor = new ServerProcessor(source, args[1]);
+        processor.attemptTransfer();
     }
-
 }
