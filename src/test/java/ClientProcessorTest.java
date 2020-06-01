@@ -45,7 +45,7 @@ public class ClientProcessorTest {
     }
 
     @Test
-    public void testValidTransferRequest() {
+    public void testValidTransferMetadata() {
         final String[] validTest1 = {"test.png", "12345", "192.42.123.24"};
         final String[] validTest2 = {"test.png", "12345", "2001:db8:1234:0000:0000:0000:0000:0000"};
         final String[] invalidTest1 = {"test.png", "12345f", "2001:db8:1234:0000:0000:0000:0000:0000"};

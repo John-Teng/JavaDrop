@@ -1,8 +1,6 @@
+import Model.TransferRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.InetAddresses;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.math.NumberUtils;
 
@@ -164,11 +162,5 @@ public class ClientProcessor {
         } finally {
             closeConnections();
         }
-    }
-
-    @Getter @Setter @AllArgsConstructor
-    static class TransferRequest {
-        private long filesize;
-        private String filename, host;
     }
 }
