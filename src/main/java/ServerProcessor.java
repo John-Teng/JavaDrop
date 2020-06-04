@@ -71,12 +71,8 @@ public class ServerProcessor {
                 .toString();
     }
 
-    private boolean isPipeValid() {
-        return in != null && out != null;
-    }
-
     public void attemptTransfer() {
-        if (!isPipeValid()) {
+        if (in == null || out == null || fileIn == null) {
             closeConnectionsWithMessage("Invalid IO Streams");
             return;
         }

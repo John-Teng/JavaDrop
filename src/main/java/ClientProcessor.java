@@ -21,7 +21,7 @@ public class ClientProcessor {
     @Nullable
     protected DataOutputStream out;
     @Nullable
-    protected FileOutputStream fileStream;
+    protected FileOutputStream fileOut;
 
     public ClientProcessor(@Nonnull Socket sock) {
         csock = sock;
@@ -43,16 +43,12 @@ public class ClientProcessor {
                 in.close();
             if (out != null)
                 out.close();
-            if (fileStream != null)
-                fileStream.close();
+            if (fileOut != null)
+                fileOut.close();
         } catch (IOException e) {
             e.printStackTrace();
             log.debug("There was a problem with closing connections");
         }
-    }
-
-    private boolean isPipeValid() {
-        return in != null && out != null;
     }
 
     @VisibleForTesting
@@ -98,15 +94,15 @@ public class ClientProcessor {
             iterations++;
 
         byte[] buf = new byte[BUFFER_SIZE];
-        fileStream = new FileOutputStream(saveFile);
+        fileOut = new FileOutputStream(saveFile);
         // TODO optimize reading and writing to the buffer
         for (int i = 0; i < iterations; i++) {
             int size = Math.min(in.available(), BUFFER_SIZE);
             in.readFully(buf, 0, size);
-            fileStream.write(buf, 0, size);
+            fileOut.write(buf, 0, size);
         }
-        fileStream.flush();
-        fileStream.close();
+        fileOut.flush();
+        fileOut.close();
     }
 
     @Nullable
@@ -127,7 +123,7 @@ public class ClientProcessor {
 
     public void processClient() {
         // check IO Pipe before we attempt
-        if (!isPipeValid()) {
+        if (in == null || out == null) {
             closeConnectionsWithError();
             return;
         }
