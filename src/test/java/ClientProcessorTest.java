@@ -64,7 +64,7 @@ public class ClientProcessorTest {
         when(mockSocket.getInputStream()).thenReturn(inputStream);
         processor = new ClientProcessor(mockServerSocket.accept());
 
-        assertArrayEquals(expected, processor.readMetadataFromStream());
+        assertArrayEquals(expected, processor.readMetadataPartsFromStream());
     }
 
     @Test(expected = EOFException.class)
@@ -80,6 +80,6 @@ public class ClientProcessorTest {
         processor = new ClientProcessor(mockServerSocket.accept());
 
         // Trigger exception
-        processor.readMetadataFromStream();
+        processor.readMetadataPartsFromStream();
     }
 }

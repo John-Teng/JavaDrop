@@ -58,13 +58,9 @@ public class ClientProcessor {
 
     @Nonnull
     @VisibleForTesting
-    String[] readMetadataFromStream() throws IOException {
-        final StringBuilder sb = new StringBuilder();
-        char c;
-        while ((c = in.readChar()) != ProtocolConstants.EOF) {
-            sb.append(c);
-        }
-        return sb.toString().split(ProtocolConstants.DELIMITER);
+    String[] readMetadataPartsFromStream() throws IOException {
+        final String metadata = JDLink.readStringFromRemote(in);
+        return metadata.split(ProtocolConstants.DELIMITER);
     }
 
     @VisibleForTesting
@@ -88,7 +84,7 @@ public class ClientProcessor {
     @Nullable
     @VisibleForTesting
     TransferRequest getTransferRequest() throws IOException {
-        final String[] parts = readMetadataFromStream();
+        final String[] parts = readMetadataPartsFromStream();
         if (!isValidTransferMetadata(parts)) {
             log.error("Received metadata contains error");
             return null;
