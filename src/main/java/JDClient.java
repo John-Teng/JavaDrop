@@ -19,7 +19,7 @@ public class JDClient {
             System.out.println("Source file is invalid");
             return;
         }
-        if (!InetAddresses.isInetAddress(args[1])) {
+        if (!"localhost".equals(args[1]) && !InetAddresses.isInetAddress(args[1])) {
             System.out.println("Destination IP is invalid");
             return;
         }

@@ -53,7 +53,7 @@ public class ClientProcessor {
     boolean isValidTransferMetadata(@Nonnull String[] parts) {
         return parts.length == 3
                 && NumberUtils.isParsable(parts[1])
-                && InetAddresses.isInetAddress(parts[2]);
+                && ("localhost".equals(parts[2]) || InetAddresses.isInetAddress(parts[2]));
     }
 
     @Nonnull

@@ -43,10 +43,12 @@ public class ClientProcessorTest {
     public void testValidTransferMetadata() {
         final String[] validTest1 = {"test.png", "12345", "192.42.123.24"};
         final String[] validTest2 = {"test.png", "12345", "2001:db8:1234:0000:0000:0000:0000:0000"};
+        final String[] validTest3 = {"test.png", "12345", "localhost"};
         final String[] invalidTest1 = {"test.png", "12345f", "2001:db8:1234:0000:0000:0000:0000:0000"};
         final String[] invalidTest2 = {"test.png", "12345", "999.12.32.43"};
         assertTrue(processor.isValidTransferMetadata(validTest1));
         assertTrue(processor.isValidTransferMetadata(validTest2));
+        assertTrue(processor.isValidTransferMetadata(validTest3));
         assertFalse(processor.isValidTransferMetadata(invalidTest1));
         assertFalse(processor.isValidTransferMetadata(invalidTest2));
     }
