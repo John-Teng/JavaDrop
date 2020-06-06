@@ -9,11 +9,11 @@ public class JDServer {
     private static final int PORT = 10000;
 
     public static void main(@Nonnull String args[]) {
-        while(true) { // server main loop
+        while (true) { // server main loop
             try {
                 final ServerSocket ssock = new ServerSocket(PORT);
                 log.debug("Listening on port + " + PORT);
-                while(true) { // create a new client processor to handle a new client
+                while (true) { // create a new client processor to handle a new client
                     ClientProcessor cp = new ClientProcessor(ssock.accept());
                     cp.processClient();
                 }

@@ -8,8 +8,8 @@ public class JDLink {
     private static final int BUFFER_SIZE = 2048;
 
     public static void readRemoteToFile(@Nonnull final InputStream in,
-                                         @Nonnull final FileOutputStream out,
-                                         final long byteSize) throws IOException {
+                                        @Nonnull final FileOutputStream out,
+                                        final long byteSize) throws IOException {
         inputStreamToOutputStream(in, out, byteSize);
     }
 
@@ -19,9 +19,9 @@ public class JDLink {
         inputStreamToOutputStream(in, out, byteSize);
     }
 
-    public static void inputStreamToOutputStream(@Nonnull final InputStream in,
-                                                 @Nonnull final OutputStream out,
-                                                 final long byteSize) throws IOException {
+    private static void inputStreamToOutputStream(@Nonnull final InputStream in,
+                                                  @Nonnull final OutputStream out,
+                                                  final long byteSize) throws IOException {
         long bytesProcessed = 0, read = 0;
         byte[] buffer = new byte[BUFFER_SIZE];
         // TODO optimize reading and writing to the buffer
@@ -40,7 +40,7 @@ public class JDLink {
             int ch2 = in.read();
             if ((ch1 | ch2) < 0)
                 throw new EOFException();
-            char c = (char)((ch1 << 8) + (ch2));
+            char c = (char) ((ch1 << 8) + (ch2));
             if (c == ProtocolConstants.EOF)
                 break;
             sb.append(c);
@@ -50,14 +50,10 @@ public class JDLink {
     }
 
     public static void writeStringToRemote(@Nonnull final OutputStream out,
-                                             @Nonnull final String message) throws IOException {
+                                           @Nonnull final String message) throws IOException {
         for (char c : message.toCharArray()) {
             out.write((c >> 8) & 0xFF);
             out.write((c) & 0xFF);
         }
     }
-
-
-
-
-    }
+}
