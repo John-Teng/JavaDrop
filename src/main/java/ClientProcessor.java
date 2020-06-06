@@ -12,8 +12,6 @@ import java.net.Socket;
 
 @Log4j2
 public class ClientProcessor {
-    private static final int BUFFER_SIZE = 2048; // TODO find a good buffer size
-
     @Nonnull
     protected final Socket csock;
     @Nullable
@@ -87,24 +85,6 @@ public class ClientProcessor {
         showErrorDialog();
     }
 
-    @VisibleForTesting
-    void writeStreamBytesToFile(@Nonnull final File saveFile, final long filesize) throws IOException {
-        long iterations = filesize / BUFFER_SIZE;
-        if (filesize % BUFFER_SIZE != 0)
-            iterations++;
-
-        byte[] buf = new byte[BUFFER_SIZE];
-        fileOut = new FileOutputStream(saveFile);
-        // TODO optimize reading and writing to the buffer
-        for (int i = 0; i < iterations; i++) {
-            int size = Math.min(in.available(), BUFFER_SIZE);
-            in.readFully(buf, 0, size);
-            fileOut.write(buf, 0, size);
-        }
-        fileOut.flush();
-        fileOut.close();
-    }
-
     @Nullable
     @VisibleForTesting
     TransferRequest getTransferRequest() throws IOException {
@@ -137,12 +117,13 @@ public class ClientProcessor {
             }
 
             // step 2: If valid, respond with "OK"
-            out.writeChars(ProtocolConstants.OK_RESPONSE);
+            JDLink.writeStringToRemote(out, ProtocolConstants.OK_RESPONSE);
 
             // step 3: read the binary data, write to file stream
             // TODO get the correct directory for where the file should be saved
             final File saveFile = FileUtils.createUniqueFile(request.getFilename(), "/");
-            writeStreamBytesToFile(saveFile, request.getFilesize());
+            fileOut = new FileOutputStream(saveFile);
+            JDLink.readRemoteToFile(in, fileOut, request.getFilesize());
 
             // step 4: check to see that the stream is closed by the client by returning a -1
             // if this is not the case, then it means the transfer is invalid
