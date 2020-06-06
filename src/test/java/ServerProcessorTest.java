@@ -11,7 +11,7 @@ public class ServerProcessorTest {
     
     @Before
     public void init() {
-        processor = new ServerProcessor(mock(File.class), mock(String.class));
+        processor = new ServerProcessor(mock(File.class), "testIP");
     }
 
     @Test
