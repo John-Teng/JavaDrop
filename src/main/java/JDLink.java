@@ -30,6 +30,7 @@ public class JDLink {
             out.write(buffer, 0, (int) read);
             bytesProcessed += read;
         }
+        out.flush();
     }
 
     @Nonnull
