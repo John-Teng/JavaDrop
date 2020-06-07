@@ -67,7 +67,6 @@ public class ServerProcessor {
                 .append(filesize)
                 .append(ProtocolConstants.DELIMITER)
                 .append(host)
-                .append(ProtocolConstants.EOF)
                 .toString();
     }
 

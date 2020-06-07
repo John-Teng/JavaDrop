@@ -56,6 +56,8 @@ public class JDLink {
             out.write((c >> 8) & 0xFF);
             out.write((c) & 0xFF);
         }
+        out.write(('%' >> 8) & 0xFF);
+        out.write(('%') & 0xFF);
         out.flush();
     }
 }

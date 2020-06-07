@@ -16,7 +16,7 @@ public class ServerProcessorTest {
 
     @Test
     public void testGenerateRequestStringSuccess() {
-        final String expected = "test.png/123456/192.241.41.16%";
+        final String expected = "test.png/123456/192.241.41.16";
         final String filename = "test.png", host = "192.241.41.16";
         long filesize = 123456;
 
