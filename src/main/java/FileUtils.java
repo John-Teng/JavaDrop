@@ -14,7 +14,7 @@ public class FileUtils {
                 .stream(getExistingFilenames(directory))
                 .map(String::toLowerCase)
                 .collect(Collectors.toSet());
-        final File saveFile = new File(createIncrementedFilename(filename.toLowerCase(), existingNames));
+        final File saveFile = new File(directory + "/" + createIncrementedFilename(filename.toLowerCase(), existingNames));
         if (!saveFile.createNewFile())
             throw new IOException("New file could not be created");
         return saveFile;
