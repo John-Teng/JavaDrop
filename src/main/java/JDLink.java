@@ -1,8 +1,10 @@
 import Model.ProtocolConstants;
+import lombok.extern.log4j.Log4j2;
 
 import javax.annotation.Nonnull;
 import java.io.*;
 
+@Log4j2
 public class JDLink {
     // TODO should this be an object or a static class?
     private static final int BUFFER_SIZE = 2048;

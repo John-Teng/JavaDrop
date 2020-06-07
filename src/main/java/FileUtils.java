@@ -1,3 +1,5 @@
+import lombok.extern.log4j.Log4j2;
+
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
@@ -5,6 +7,7 @@ import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Log4j2
 public class FileUtils {
 
     @Nonnull
@@ -15,6 +18,7 @@ public class FileUtils {
                 .map(String::toLowerCase)
                 .collect(Collectors.toSet());
         final File saveFile = new File(directory + "/" + createIncrementedFilename(filename.toLowerCase(), existingNames));
+        log.debug("creating savefile with name " + saveFile.getName());
         if (!saveFile.createNewFile())
             throw new IOException("New file could not be created");
         return saveFile;

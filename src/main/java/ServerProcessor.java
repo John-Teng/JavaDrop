@@ -30,7 +30,7 @@ public class ServerProcessor {
             fileIn = new FileInputStream(source);
         } catch (IOException e) {
             e.printStackTrace();
-            log.debug("Problem with setting up connections");
+            log.error("Problem with setting up connections");
             closeConnections();
         }
     }
@@ -52,7 +52,7 @@ public class ServerProcessor {
                 fileIn.close();
         } catch (IOException e) {
             e.printStackTrace();
-            log.debug("There was a problem with closing connections");
+            log.error("There was a problem with closing connections");
         }
     }
 
@@ -76,17 +76,21 @@ public class ServerProcessor {
             return;
         }
         try {
+            log.debug("attempting transfer");
             // Step 1: Send transfer request
             JDLink.writeStringToRemote(out, generateRequestString(source.getName(), destination, source.length()));
+            log.debug("sent file metadata to remote, waiting for response");
 
             // Step 2: Wait for OK
             final String response = JDLink.readStringFromRemote(in);
+            log.debug("received response");
             if (!ProtocolConstants.OK_RESPONSE.equals(response)) {
                 closeConnectionsWithMessage("Receiver has denied transfer request");
                 return;
             }
 
             // Step 3: Write bytes to stream
+            log.debug("writing bytes to remote");
             JDLink.writeFileToRemote(fileIn, out, source.length());
             closeConnectionsWithMessage("File data has been sent");
         } catch (IOException e) {

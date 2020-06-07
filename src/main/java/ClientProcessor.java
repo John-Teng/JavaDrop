@@ -12,6 +12,8 @@ import java.net.Socket;
 
 @Log4j2
 public class ClientProcessor {
+    private static final String SAVE_DIR = "/Users/johnteng/dev";
+
     @Nonnull
     protected final Socket csock;
     @Nullable
@@ -29,7 +31,7 @@ public class ClientProcessor {
             out = new DataOutputStream(new BufferedOutputStream(csock.getOutputStream()));
         } catch (IOException e) {
             e.printStackTrace();
-            log.debug("ClientProcessor could not be initialized with I/O Streams");
+            log.error("ClientProcessor could not be initialized with I/O Streams");
             closeConnectionsWithError();
         }
     }
@@ -45,7 +47,7 @@ public class ClientProcessor {
                 fileOut.close();
         } catch (IOException e) {
             e.printStackTrace();
-            log.debug("There was a problem with closing connections");
+            log.error("There was a problem with closing connections");
         }
     }
 
@@ -60,6 +62,7 @@ public class ClientProcessor {
     @VisibleForTesting
     String[] readMetadataPartsFromStream() throws IOException {
         final String metadata = JDLink.readStringFromRemote(in);
+        log.debug("read metadata from remote: " + metadata);
         return metadata.split(ProtocolConstants.DELIMITER);
     }
 
@@ -68,7 +71,7 @@ public class ClientProcessor {
                                     @Nonnull final String host,
                                     final long filesize) {
         // TODO show dialog with options and ask user if we should proceed
-        return false;
+        return true;
     }
 
     @VisibleForTesting
@@ -91,7 +94,7 @@ public class ClientProcessor {
         }
         final TransferRequest request = new TransferRequest(Long.parseLong(parts[1]), parts[0], parts[2]);
         if (!isUserPermissionGranted(request.getFilename(), request.getHost(), request.getFilesize())) {
-            log.info("User has denied permission for file transfer");
+            log.error("User has denied permission for file transfer");
             return null;
         }
         return request;
@@ -106,19 +109,25 @@ public class ClientProcessor {
         // TODO unsuccessful completion of this main loop should show error dialog
         try {
             // step 1: parse the filename/filesize(in bytes)/ip metadata from the connection as chars
+            log.debug("attempting to parse metadata");
             final TransferRequest request = getTransferRequest();
             if (request == null) {
                 closeConnectionsWithError();
                 return;
             }
+            log.debug("received valid metadata");
 
             // step 2: If valid, respond with "OK"
+            log.debug("sending OK response");
             JDLink.writeStringToRemote(out, ProtocolConstants.OK_RESPONSE);
 
             // step 3: read the binary data, write to file stream
             // TODO get the correct directory for where the file should be saved
-            final File saveFile = FileUtils.createUniqueFile(request.getFilename(), "/");
+            log.debug("creating new savefile at specified directory");
+            final File saveFile = FileUtils.createUniqueFile(request.getFilename(), SAVE_DIR);
             fileOut = new FileOutputStream(saveFile);
+
+            log.debug("reading file bytes from remote");
             JDLink.readRemoteToFile(in, fileOut, request.getFilesize());
 
             // step 4: check to see that the stream is closed by the client by returning a -1
@@ -127,6 +136,7 @@ public class ClientProcessor {
                 log.error("Client has not sent over the listed amount of data");
                 closeConnectionsWithError();
             }
+            log.debug("successfully received file");
         } catch (IOException e) {
             e.printStackTrace();
             closeConnectionsWithError();

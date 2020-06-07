@@ -19,7 +19,7 @@ public class JDServer {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                log.debug("broken connection");
+                log.error("broken connection");
             }
         }
     }
