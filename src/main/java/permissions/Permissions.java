@@ -1,3 +1,5 @@
+package permissions;
+
 import javax.annotation.Nonnull;
 
 public class Permissions {

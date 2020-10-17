@@ -1,4 +1,4 @@
-import Model.ProtocolConstants;
+import model.ProtocolConstants;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.log4j.Log4j2;
 

@@ -1,4 +1,4 @@
-import Model.ProtocolConstants;
+import model.ProtocolConstants;
 import lombok.extern.log4j.Log4j2;
 
 import javax.annotation.Nonnull;
