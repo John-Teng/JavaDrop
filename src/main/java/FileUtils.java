@@ -27,7 +27,7 @@ public class FileUtils {
     @Nonnull
     public static String createIncrementedFilename(@Nonnull final String originalName,
                                                    @Nonnull final Set<String> existingNames) {
-        int index = originalName.indexOf(".");
+        int index = originalName.lastIndexOf(".");
         final String body = originalName.substring(0, index), extension = originalName.substring(index);
         String potentialName = body + extension;
         int fileIncrement = 0;

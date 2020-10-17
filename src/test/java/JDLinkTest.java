@@ -87,7 +87,7 @@ public class JDLinkTest {
     @Test
     public void testWriteStringToRemote() throws IOException {
         final String test = "Hello World";
-        final byte[] expected = StandardCharsets.UTF_16BE.encode(test).array();
+        final byte[] expected = StandardCharsets.UTF_16BE.encode("Hello World%").array();
         out = new ByteArrayOutputStream();
         JDLink.writeStringToRemote(out, test);
         assertArrayEquals(expected, ((ByteArrayOutputStream) out).toByteArray());
