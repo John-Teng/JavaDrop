@@ -1,3 +1,5 @@
+package permissions;
+
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import lombok.extern.log4j.Log4j2;

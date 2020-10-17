@@ -1,5 +1,5 @@
-import Model.ProtocolConstants;
-import Model.TransferRequest;
+import model.ProtocolConstants;
+import model.TransferRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.net.InetAddresses;
 import lombok.extern.log4j.Log4j2;
