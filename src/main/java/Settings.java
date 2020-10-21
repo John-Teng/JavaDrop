@@ -14,7 +14,7 @@ import java.util.Map;
 public class Settings {
     // Configuration
     private static final String DIVIDER = SystemUtils.IS_OS_WINDOWS ? "\\" : "/";
-    public static final String DOWNLOAD_DIR_KEY = "downloadPath";
+    private static final String DOWNLOAD_DIR_KEY = "downloadPath";
     private static final String SETTINGS_DIR = System.getProperty("user.home") + DIVIDER + "JavaDrop";
     public static final String SETTINGS_FILE_PATH = SETTINGS_DIR + DIVIDER + "settings.yaml";
     private static final String DOWNLOADS_DIR = SETTINGS_DIR + DIVIDER + "Downloads";
@@ -52,6 +52,7 @@ public class Settings {
     }
 
     private static void initializeSettingsFile(@Nonnull OutputStream out) throws IOException {
+        // Need to set YAML formatting options here, otherwise will include "{}"
         final DumperOptions options = new DumperOptions();
         options.setIndent(2);
         options.setPrettyFlow(true);
