@@ -35,6 +35,7 @@ public class JDLink {
         out.flush();
     }
 
+    // TODO rename to something more appropriate
     @Nonnull
     public static String readStringFromRemote(@Nonnull final InputStream in) throws IOException {
         final StringBuilder sb = new StringBuilder();
@@ -52,6 +53,7 @@ public class JDLink {
         return sb.toString();
     }
 
+    // TODO rename to something more appropriate
     public static void writeStringToRemote(@Nonnull final OutputStream out,
                                            @Nonnull final String message) throws IOException {
         for (char c : message.toCharArray()) {
